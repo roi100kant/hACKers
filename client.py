@@ -97,18 +97,8 @@ class Client:
         question = tcpSocket.recv(1024)
         print(question.decode("utf-8"))
 
-        #make the socket non blocking
+        #handles the part where we wait for the user to enter or server to respond
         self.nonBlockingCheckResponse(tcpSocket)
-                
-        # next steps are:
-        # allow the user to enter their answer to the question
-        # send the answer to the server
-        # wait for the server response regarding the answer
-        # go back to searching offers
-
-        # IMPORTANT: we need to handle the case where we get the answer
-        # but the other player answered before us so the server sent us a message 
-        # before we send our own answer (we are single thread)
 
    
 if __name__ == '__main__':
