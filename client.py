@@ -1,11 +1,7 @@
 import socket
 from struct import *
 import threading as thread
-
-from assist import Assist
-
-#the main thread
-mainT = thread.main_thread()
+import fcntl, os, time
 
 class Client:
 
@@ -13,19 +9,6 @@ class Client:
         udpSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         udpSocket.bind((socket.gethostbyname(socket.gethostname()), 13117)) #enter ip
         self.udpSocket = udpSocket
-        self.assist = Assist(thread.Condition(thread.Lock()))
-
-    # reads one char from the user without pressing enter
-    def readAnswer(self):
-        global userAns
-        # three imports that are needed only for read
-        import tty, sys, termios
-        filedescriptors = termios.tcgetattr(sys.stdin)
-        tty.setcbreak(sys.stdin)
-        userAns=sys.stdin.read(1)[0]
-        print("You pressed", userAns)
-        termios.tcsetattr(sys.stdin, termios.TCSADRAIN,filedescriptors)
-        self.assist.wakeUp()
 
     def unpackUdpPacket(self, packet):
         return unpack('IbH', packet)
@@ -51,20 +34,61 @@ class Client:
             except Exception as _:
                 pass
 
-    def gameResponse(self, tcpSocket : socket.socket):
-        global serverRes
-        try:
-            response = tcpSocket.recv(1024)
-            serverRes = response.decode("utf-8")
-            self.assist.wakeUp()
-        except Exception as _:
-            pass
+    def nonBlockingCheckResponse(self, tcpSocket : socket.socket):
+        global userRes, serverRes
+        import sys, select, tty, termios, time
 
+        #returns if the stdin is ready to be read from (there is a character there)
+        def isData():
+            return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
+
+        # try to get msg from the server
+        def gameResponse():
+            global serverRes
+            try:
+                tcpSocket.setblocking(0)
+                response = tcpSocket.recv(1024)
+                serverRes = response.decode("utf-8")
+                self.assist.wakeUp()
+            except Exception as _:
+                pass
+            finally:
+                tcpSocket.setblocking(1)
+        
+        # the old settings of the stdin
+        old_settings = termios.tcgetattr(sys.stdin)
+
+        try:
+            # places terminal into a character break
+            tty.setcbreak(sys.stdin.fileno())
+            
+            #our main loop, works for ten seconds, trying to get response from server and user and then sleep
+            t_end = time.time() + 10
+            while time.time() < t_end:
+                gameResponse()
+                if isData():
+                    userRes = sys.stdin.read(1)
+                    print("You pressed", userRes)
+                    break
+
+                if serverRes != None:
+                    print(serverRes)
+                    break
+                
+                if userRes != None:
+                    # send to the server
+                    # wait for the response of the server
+                    break
+                time.sleep(0.1)
+
+        finally:
+            #return the old settings 
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
     #in this state we are connected to the server and are about to play the game
     def handleGame(self, tcpSocket : socket.socket):
-        global userAns, serverRes
-        userAns, serverRes = None, None
+        global userRes, serverRes
+        userRes, serverRes = None, None
         # first step, send our name to the server 
         tcpSocket.send("hACKers")
 
@@ -73,16 +97,9 @@ class Client:
         question = tcpSocket.recv(1024)
         print(question.decode("utf-8"))
 
-        inputThread = thread.Thread(target = self.readAnswer)
-        serverThread = thread.Thread(target = self.gameResponse)
-
-        inputThread.start()
-        serverThread.start()
-        self.assist.wait(10)
-
-
-
-
+        #make the socket non blocking
+        self.nonBlockingCheckResponse(tcpSocket)
+                
         # next steps are:
         # allow the user to enter their answer to the question
         # send the answer to the server

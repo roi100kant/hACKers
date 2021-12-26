@@ -1,6 +1,7 @@
 import socket
 import threading as thread
 from struct import *
+from assist import Assist
 
 # t1 = thread.Thread(target = <function name>) - creating a thread
 # t1.start() - starting the thread
@@ -15,6 +16,7 @@ class Server:
     def __init__(self, ip, port):
         self.ip = ip
         self.port = port
+        self.assist = Assist(thread.Condition(thread.Lock()))
 
     def packUdpPacket(sel, port):
         return pack('IbH', 0xabcddcba, 0x2, port)
