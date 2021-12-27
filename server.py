@@ -80,12 +80,12 @@ class Server:
     def startGame(self):
         q = self.bank.getQ()
         print()
-        msg = (Colors.RED + "Hello and welcome to the game!\n" 
+        msg = (Colors.BLUE + "Hello and welcome to the game!\n" 
                 + f"Player 1: {self.firstPlayer.name}\n" 
-                + f"Player 2: {self.secondPlayer.name}\n" + Colors.RESET  
-                + Colors.BLUE + "----------------------------------\n" + Colors.RESET
-                + Colors.CYAN + f"answer as fast as you can, you have at most 10 seconds:\n" + Colors.RESET
-                + Colors.GREEN + f"{q[0]}" + Colors.RESET).encode("utf-8")
+                + f"Player 2: {self.secondPlayer.name}\n"  
+                + "----------------------------------\n" 
+                + Colors.GREEN + f"answer as fast as you can!! you have 10 seconds or until the other guys time:\n"
+                + Colors.RED + f"{q[0]}" + Colors.RESET).encode("utf-8")
         print(msg.decode("utf-8")) 
         #generate math problam:
         self.firstPlayer.socket.send(msg)
@@ -110,7 +110,7 @@ class Server:
             udpSocket.sendto(self.packUdpPacket(self.port), ("255.255.255.255", 13117))
             time.sleep(1)
 
-   def manage(self, welcomeSocket : socket.socket):
+    def manage(self, welcomeSocket : socket.socket):
         #forever accepting clients
         t1, t2 = None, None
 
@@ -153,7 +153,7 @@ class Server:
                     pass
                 self.firstPlayer, self.secondPlayer = None, None
                 self.winner = None
-                print("Game over, sending out offer requests...")
+                print(Colors.GREEN + "Game over, sending out offer requests..." + Colors.RESET)
                 offerThread.start()
             except Exception as _:
                 # if both player fields got set that means the offers stop, so we start them again
@@ -161,14 +161,14 @@ class Server:
                     offerThread.start()
                 if self.firstPlayer != None:
                     try:
-                        self.firstPlayer.socket.send("sorry an error has occured, reconnect")
+                        self.firstPlayer.socket.send((Colors.RED + "sorry an error has occured, reconnect" + Colors.RESET).encode("utf-8"))
                         self.firstPlayer.socket.close()
                     except Exception as _:
                         pass
                     self.firstPlayer = None
                 if self.secondPlayer != None:
                     try:
-                        self.secondPlayer.socket.send("sorry an error has occured, reconnect")
+                        self.secondPlayer.socket.send((Colors.RED + "sorry an error has occured, reconnect" + Colors.RESET).encode("utf-8"))
                         self.secondPlayer.socket.close()
                     except Exception as _:
                         pass
