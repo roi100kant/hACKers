@@ -122,7 +122,7 @@ class Server:
                 numberOfConnections = 0
                 while numberOfConnections < 2:
                     clientSock, clientAdd = welcomeSocket.accept()
-                    print("connection")
+                    print("player" , numberOfConnections+1, "connected")
                     if numberOfConnections == 0:
                         self.firstPlayer = Player(clientAdd[0], clientAdd[1], clientSock)
                         t1 = thread.Thread(target = self.getName, args = [self.firstPlayer])
@@ -138,10 +138,12 @@ class Server:
                     self.startGame()
                 else:
                     # one didnt send their name so we are cancelling the game
-                    res = "sorry, the game is cancelled, try connecting again!".encode("utf-8")
-                    self.firstPlayer.socket.send(res)
-                    self.secondPlayer.socket.send(res)
-
+                    res = "sorry, the game is cancelled, one player didnt enter their name. come again!".encode("utf-8")
+                    try:
+                        self.firstPlayer.socket.send(res)
+                        self.secondPlayer.socket.send(res)
+                    except:
+                        pass
                 # done with the everything, reseting the fields
                 try:
                     self.firstPlayer.socket.close()
@@ -151,7 +153,11 @@ class Server:
                 self.firstPlayer, self.secondPlayer = None, None
                 self.winner = None
                 print("Game over, sending out offer requests...")
+                offerThread.start()
             except Exception as _:
+                # if both player fields got set that means the offers stop, so we start them again
+                if self.firstPlayer != None and self.secondPlayer != None:
+                    offerThread.start()
                 if self.firstPlayer != None:
                     try:
                         self.firstPlayer.socket.send("sorry an error has occured, reconnect")
