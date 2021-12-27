@@ -2,8 +2,7 @@ import socket
 import threading as thread
 from struct import *
 import time
-
-from helper import QuestionBank
+from helper import QuestionBank, Colors
 
 # t1 = thread.Thread(target = <function name>) - creating a thread
 # t1.start() - starting the thread
@@ -80,19 +79,20 @@ class Server:
 
     def startGame(self):
         q = self.bank.getQ()
-
-        msg = f"""Hello and welcome to the game!
-                  Player 1: {self.firstPlayer.name}
-                  Player 2: {self.secondPlayer.name}
-                  ----------------------------------
-                  answer as fast as you can, you have at most 10 seconds:
-                  {q[0]}""".encode("utf-8")
+        print()
+        msg = ("Hello and welcome to the game!\n" 
+                + Colors.RED + f"Player 1: {self.firstPlayer.name}\n" 
+                + f"Player 2: {self.secondPlayer.name}\n" + Colors.RESET  
+                + Colors.BLUE + "----------------------------------\n" + Colors.RESET
+                + f"answer as fast as you can, you have at most 10 seconds:\n"
+                + Colors.GREEN + f"{q[0]}" + Colors.RESET).encode("utf-8")
+        print(msg.decode("utf-8")) 
         #generate math problam:
         self.firstPlayer.socket.send(msg)
         self.secondPlayer.socket.send(msg)
 
-        t1 = thread.Thread(target= self.playerAnswer, args = [self.firstPlayer])
-        t2 = thread.Thread(target= self.playerAnswer, args = [self.secondPlayer])
+        t1 = thread.Thread(target= self.playerAnswer, args = [self.firstPlayer, q[1]])
+        t2 = thread.Thread(target= self.playerAnswer, args = [self.secondPlayer, q[1]])
         t1.start()
         t2.start()
         t1.join()

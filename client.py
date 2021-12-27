@@ -1,5 +1,6 @@
 import socket
 from struct import *
+from helper import Colors
 
 class Client:
 
@@ -21,20 +22,24 @@ class Client:
                 packet, IPnPort = self.udpSocket.recvfrom(1024)
                 seperate = IPnPort[0].split(".")
                 ip = self.prefixIp + "." + seperate[2] + "." + seperate[3]
+                print("got this:",packet)
                 magic_cookie, msg_type, port_num = self.unpackUdpPacket(packet)
+                print("unpack this:",self.unpackUdpPacket(packet))
                 # check corectness and if so try and connect and play the game
                 if magic_cookie == 0xabcddcba and msg_type == 0x2:
                     tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     try:
-                        print(f"Received offer from {ip}, attempting to connect...")
+                        print(Colors.GREEN + f"Received offer from {ip}, attempting to connect..." + Colors.RESET)
                         print(IPnPort, port_num)
                         tcpSocket.connect((ip, port_num))
                         self.handleGame(tcpSocket)
-                    except Exception as _:
+                    except Exception as e:
+                        print(e)
                         pass
                     finally:
                         tcpSocket.close()
-            except Exception as _:
+            except Exception as e:
+                print(e)
                 pass
 
     def nonBlockingCheckResponse(self, tcpSocket : socket.socket):
