@@ -80,11 +80,11 @@ class Server:
     def startGame(self):
         q = self.bank.getQ()
         print()
-        msg = ("Hello and welcome to the game!\n" 
-                + Colors.RED + f"Player 1: {self.firstPlayer.name}\n" 
+        msg = (Colors.RED + "Hello and welcome to the game!\n" 
+                + f"Player 1: {self.firstPlayer.name}\n" 
                 + f"Player 2: {self.secondPlayer.name}\n" + Colors.RESET  
                 + Colors.BLUE + "----------------------------------\n" + Colors.RESET
-                + f"answer as fast as you can, you have at most 10 seconds:\n"
+                + Colors.CYAN + f"answer as fast as you can, you have at most 10 seconds:\n" + Colors.RESET
                 + Colors.GREEN + f"{q[0]}" + Colors.RESET).encode("utf-8")
         print(msg.decode("utf-8")) 
         #generate math problam:
@@ -97,11 +97,12 @@ class Server:
         t2.start()
         t1.join()
         t2.join()
-        msg = ""
         if self.winner == None:
-            msg = f"unfortunately, neither of you won, maybe try and answer faster next time!\nthe correct answer was {q[1]}"
+            msg = Colors.PURPLE + f"unfortunately, neither of you won, maybe try and answer faster next time!\nbtw, the correct answer was {q[1]}" + Colors.RESET
         else:
-            msg = f"CONGRATULATION TO { self.winner } FOR THE WIN!\nthe correct answer was {q[1]}"
+            msg = Colors.YELLOW + f"CONGRATULATION TO { self.winner } FOR THE WIN!\nthe correct answer was {q[1]}" + Colors.RESET
+        self.firstPlayer.socket.send(msg)
+        self.secondPlayer.socket.send(msg)
 
     def offers(self, udpSocket : socket.socket):
         udpSocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -109,7 +110,7 @@ class Server:
             udpSocket.sendto(self.packUdpPacket(self.port), ("255.255.255.255", 13117))
             time.sleep(1)
 
-    def manage(self, welcomeSocket : socket.socket):
+   def manage(self, welcomeSocket : socket.socket):
         #forever accepting clients
         t1, t2 = None, None
 

@@ -32,6 +32,8 @@ class Colors:
     BLUE  = "\033[1;34m"
     CYAN  = "\033[1;36m"
     GREEN = "\033[0;32m"
+    PURPLE = "\033[95m"
+    YELLOW = "\033[93m"
     RESET = "\033[0;0m"
     BOLD    = "\033[;1m"
     REVERSE = "\033[;7m"
