@@ -91,8 +91,8 @@ class Server:
         self.firstPlayer.socket.send(msg)
         self.secondPlayer.socket.send(msg)
 
-        t1 = thread.Thread(target= self.playerAnswer, args = self.firstPlayer)
-        t2 = thread.Thread(target= self.playerAnswer, args = self.secondPlayer)
+        t1 = thread.Thread(target= self.playerAnswer, args = [self.firstPlayer])
+        t2 = thread.Thread(target= self.playerAnswer, args = [self.secondPlayer])
         t1.start()
         t2.start()
         t1.join()
@@ -105,7 +105,7 @@ class Server:
 
     def offers(self, udpSocket : socket.socket):
         udpSocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        while self.firstPlayer == None and self.secondPlayer == None:
+        while self.firstPlayer == None or self.secondPlayer == None:
             udpSocket.sendto(self.packUdpPacket(self.port), ("255.255.255.255", 13117))
             time.sleep(1)
 
@@ -125,10 +125,10 @@ class Server:
                     print("connection")
                     if numberOfConnections == 0:
                         self.firstPlayer = Player(clientAdd[0], clientAdd[1], clientSock)
-                        t1 = thread.Thread(target = self.getName, args = self.firstPlayer)
+                        t1 = thread.Thread(target = self.getName, args = [self.firstPlayer])
                     else:
                         self.secondPlayer = Player(clientAdd[0], clientAdd[1], clientSock)
-                        t2 = thread.Thread(target = self.getName, args = self.secondPlayer)
+                        t2 = thread.Thread(target = self.getName, args = [self.secondPlayer])
                     numberOfConnections = numberOfConnections + 1
                 t1.start()
                 t2.start()

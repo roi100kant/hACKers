@@ -3,11 +3,12 @@ from struct import *
 
 class Client:
 
-    def __init__(self, ip):
+    def __init__(self, prefixIp):
         udpSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        udpSocket.bind((ip, 13117)) #enter ip
+        udpSocket.bind(("", 13117)) #enter ip
+        udpSocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.udpSocket = udpSocket
-        self.ip = ip
+        self.prefixIp = prefixIp
 
     def unpackUdpPacket(self, packet):
         return unpack('IbH', packet)
@@ -18,14 +19,16 @@ class Client:
             try:
                 # recieve the info and unpack it
                 packet, IPnPort = self.udpSocket.recvfrom(1024)
+                seperate = IPnPort[0].split(".")
+                ip = self.prefixIp + "." + seperate[2] + "." + seperate[3]
                 magic_cookie, msg_type, port_num = self.unpackUdpPacket(packet)
-                
                 # check corectness and if so try and connect and play the game
                 if magic_cookie == 0xabcddcba and msg_type == 0x2:
                     tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     try:
-                        print(f"Received offer from {IPnPort[0]}, attempting to connect...")
-                        tcpSocket.connect((IPnPort[0], port_num))
+                        print(f"Received offer from {ip}, attempting to connect...")
+                        print(IPnPort, port_num)
+                        tcpSocket.connect((ip, port_num))
                         self.handleGame(tcpSocket)
                     except Exception as _:
                         pass
@@ -89,7 +92,7 @@ class Client:
     #in this state we are connected to the server and are about to play the game
     def handleGame(self, tcpSocket : socket.socket):
         # first step, send our name to the server 
-        tcpSocket.send("hACKers")
+        tcpSocket.send("hACKers".encode("utf-8"))
 
         # then we need to wait for the server rsponse over tcp
         # and then print the message to the human players
@@ -101,14 +104,14 @@ class Client:
 
    
 if __name__ == '__main__':
-    ip = -1
-    while ip == -1:
-        ans = input("enter d for dev, t for test")
+    prefixIp = -1
+    while prefixIp == -1:
+        ans = input("enter d for dev, t for test\n")
         if ans == "d":
-            ip = "172.1.0.69"
+            prefixIp = "172.1"
         if ans == "t":
-            ip = "172.99.0.69"
-    client = Client(ip)
+            prefixIp = "172.99"
+    client = Client(prefixIp)
     client.run()
 
 
