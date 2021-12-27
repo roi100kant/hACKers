@@ -1,13 +1,23 @@
 import socket
 import threading as thread
 from struct import *
-from assist import Assist
+import time
+
+from helper import QuestionBank
 
 # t1 = thread.Thread(target = <function name>) - creating a thread
 # t1.start() - starting the thread
 # t1.join() - prevent from continuing until t1 has ended
 
+class Player:
+    def __init__(self, ip, port, socket : socket.socket):
+        self.ip = ip
+        self.port = port
+        self.socket = socket
+        self.name = None
 
+    def setName(self, name):
+        self.name = name
 
 #server class
 class Server:
@@ -16,20 +26,127 @@ class Server:
     def __init__(self, ip, port):
         self.ip = ip
         self.port = port
-        self.assist = Assist(thread.Condition(thread.Lock()))
+        self.firstPlayer = None
+        self.secondPlayer = None
+        self.winner = None
+        self.bank = QuestionBank()
+        self.condition = thread.Condition(thread.Lock())
 
     def packUdpPacket(sel, port):
         return pack('IbH', 0xabcddcba, 0x2, port)
 
-    # will run of a thread and manage accepts from users
-    # sends them to their own thread for the connection
-    def manageAccepts(self, welcomeSocket):
+    def getName(self, player : Player):
+        socket = player.socket
+        socket.setblocking(0)
+        msg = None
+
+        end = time.time() + 10.01
+        while time.time() < end:
+            try: 
+                msg = socket.recv(1024)
+            except Exception as _:
+                pass
+            time.sleep(0.1)
+
+        socket.setblocking(1)
+        player.setName(msg.decode("utf-8"))
+
+    def playerAnswer(self, player : Player, ans):
+        socket = player.socket
+        socket.setblocking(0)
+        msg = None
+
+        end = time.time() + 10.01
+        while time.time() < end:
+            try: 
+                msg = socket.recv(1024).decode("utf-8")
+                if msg != None:
+                    self.condition.acquire()
+                    if self.winner != None:
+                        self.condition.release()
+                        break
+                    if int(msg) == ans:
+                        self.winner = player.name
+                    else:
+                        if self.firstPlayer.name == player.name:
+                            self.winner = self.secondPlayer.name
+                        else:
+                            self.winner = self.firstPlayer.name
+                    self.condition.release()
+                    break
+            except Exception as _:
+                pass
+            time.sleep(0.1)
+
+    def startGame(self):
+        q = self.bank.getQ()
+
+        msg = f"""Hello and welcome to the game!
+                  Player 1: {self.firstPlayer.name}
+                  Player 2: {self.secondPlayer.name}
+                  ----------------------------------
+                  answer as fast as you can, you have at most 10 seconds:
+                  {q[0]}""".encode("utf-8")
+        #generate math problam:
+        self.firstPlayer.socket.send(msg)
+        self.secondPlayer.socket.send(msg)
+
+        t1 = thread.Thread(target= self.playerAnswer, args = self.firstPlayer)
+        t2 = thread.Thread(target= self.playerAnswer, args = self.secondPlayer)
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+        msg = ""
+        if self.winner == None:
+            msg = f"unfortunately, neither of you won, maybe try and answer faster next time!\nthe correct answer was {q[1]}"
+        else:
+            msg = f"CONGRATULATION TO { self.winner } FOR THE WIN!\nthe correct answer was {q[1]}"
+
+    def offers(self, socket : socket.socket):
+        while self.firstPlayer == None and self.secondPlayer == None:
+            socket.sendto(self.packUdpPacket(self.port), "255.255.255.255", 13117)
+            time.sleep(1)
+
+    def manage(self, welcomeSocket):
         #forever accepting clients
+        t1, t2 = None, None
+
+        # udp for sending broadcast
+        udpSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        offerThread = thread.Thread(target = self.offers, args = udpSocket)
+        offerThread.start()
+
         while True:
             numberOfConnections = 0
-            clientSock, clientAdd = welcomeSocket.accept()
+            while numberOfConnections < 2:
+                clientSock, clientAdd = welcomeSocket.accept()
+                if numberOfConnections == 0:
+                    self.firstPlayer = Player(clientAdd[0], clientAdd[1], clientSock)
+                    t1 = thread.Thread(target = self.getName, args = self.firstPlayer)
+                else:
+                    self.secondPlayer = Player(clientAdd[0], clientAdd[1], clientSock)
+                    t2 = thread.Thread(target = self.getName, args = self.secondPlayer)
 
+            t1.start()
+            t2.start()
+            t1.join()
+            t2.join()
+            if (self.firstPlayer.name != None) and (self.secondPlayer.name != None):
+                self.startGame()
+            else:
+                # one didnt send their name so we are cancelling the game
+                res = "sorry, the game is cancelled, try connecting again!".encode("utf-8")
+                self.firstPlayer.socket.send(res)
+                self.secondPlayer.socket.send(res)
 
+            # done with the everything, reseting the fields
+            self.firstPlayer.socket.close()
+            self.secondPlayer.socket.close()
+            self.firstPlayer, self.secondPlayer = None, None
+            self.winner = None
+            print("Game over, sending out offer requests...")
+            
     # main run function of the server
     def run(self):
 
@@ -38,16 +155,24 @@ class Server:
         welcomeSocket.bind((self.ip, self.port))
 
         # the size of the client listen queue
-        welcomeSocket.listen(2)
+        welcomeSocket.listen()
 
         # startup message  
         print(f"Server started, listening on IP address {self.ip}")
 
         # now need to manage accepts and at the same time send the udp offers.
+        self.manage()
 
 
 
 
 if __name__ == '__main__':
-    server = Server(socket.gethostbyname(socket.gethostname()),2069) # enter ip, port
+    ip = -1
+    while ip == -1:
+        ans = input("enter d for dev, t for test")
+        if ans == "d":
+            ip = "172.1.0.69"
+        if ans == "t":
+            ip = "172.99.0.69"
+    server = Server(ip, 2069)
     server.run()

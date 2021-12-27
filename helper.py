@@ -15,12 +15,12 @@ class Assist:
         self.condition.wait(time)
         self.condition.release()
 
-    #read a character from screen - blocking
-    def readAnswer(self):
-        # three imports that are needed only for read
-        import tty, sys, termios
-        filedescriptors = termios.tcgetattr(sys.stdin)
-        tty.setcbreak(sys.stdin)
-        userAns=sys.stdin.read(1)[0]
-        print("You pressed", userAns)
-        termios.tcsetattr(sys.stdin, termios.TCSADRAIN,filedescriptors)
+import random
+class QuestionBank:
+    
+    def __init__(self):
+        self.questions = [["17*2 - 29", 5], ["(45 + 54) / 11", 9]
+
+                        ]
+    def getQ(self):
+        return self.questions[random.randint(0, len(self.questions)-1)]
