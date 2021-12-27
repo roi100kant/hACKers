@@ -17,15 +17,15 @@ class Client:
         while 1:
             try:
                 # recieve the info and unpack it
-                packet = self.udpSocket.recv(1024)
+                packet, IPnPort = self.udpSocket.recvfrom(1024)
                 magic_cookie, msg_type, port_num = self.unpackUdpPacket(packet)
                 
                 # check corectness and if so try and connect and play the game
                 if magic_cookie == 0xabcddcba and msg_type == 0x2:
                     tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     try:
-                        print(f"Received offer from {self.ip}, attempting to connect...")
-                        tcpSocket.connect((self.ip, port_num))
+                        print(f"Received offer from {IPnPort[0]}, attempting to connect...")
+                        tcpSocket.connect((IPnPort[0], port_num))
                         self.handleGame(tcpSocket)
                     except Exception as _:
                         pass
