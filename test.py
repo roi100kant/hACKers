@@ -26,7 +26,7 @@ stats.addNumberOccurence("2")
 stats.addNumberOccurence("1")
 stats.addNumberOccurence("1")
 
-print(stats.stats() + Colors.BLUE + "Hello and welcome to the game!\n" 
+print(stats.stats() + Colors.UNDERLINE +  "Hello and welcome to the game!\n" 
                 + f"Player 1: roi\n" 
                 + f"Player 2: david\n"  
                 + "----------------------------------\n" 

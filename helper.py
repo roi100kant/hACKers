@@ -9,7 +9,7 @@ class QuestionBank:
                           ("f'(x)=2x, f(3) = ?", 9), ("2x + 3 = 7, x = ?", 2), ("7x - 6 = 8, x = ?", 2), ("2 * 3", 6),("e - (e - 2)", 2),
                           ("25 / 5 = ?", 5), ("how many legs 1 cats and 2 chickens have?", 8), ("5 + 5 - 1 = ?", 9), ("if Anny has 5 apples and John has only 3, how much is 1 + 1?", 2),
                           ("how many pants is a pair of pants", 1), ("3 * 3 / 3 * 3 / 3 * 3 / 3", 3), ("what chapter is the transport layer?", 3), 
-                          ("what chapter is the network layer?", 4), ("what chapter is the link layer?", 5), ("what was the numebr of qyestions in the quiz?", 7),
+                          ("what chapter is the network layer?", 4), ("what chapter is the link layer?", 5), ("what was the numebr of questions in the quiz?", 7),
                           ("9! / 8! = ?", 9), ("what number day is friday?", 6)
                          ]
     def getQ(self):
@@ -25,6 +25,7 @@ class Colors:
     RESET = "\033[0;0m"
     BOLD    = "\033[;1m"
     REVERSE = "\033[;7m"
+    UNDERLINE = '\033[4m'
 
 
 class GameStats:
@@ -51,7 +52,7 @@ class GameStats:
         return maxNumber
     
     def getThreeBestPlayers(self):
-        players = ["Empty", "Empty", "Empty"]
+        players = [f"{Colors.YELLOW}First:{Colors.RESET} Empty", f"{Colors.PURPLE}Second:{Colors.RESET} Empty", f"Thrid: Empty"]
         
         if len(self.playerScores) == 1:
             name = list(self.playerScores.keys())[0]
@@ -63,10 +64,10 @@ class GameStats:
 
             if score1 > score2:
                 players[0] = f"{Colors.YELLOW}First:{Colors.RESET} {name1}, with {score1} points"
-                players[1] = f"Second: {name2}, with {score2} points"
+                players[1] = f"{Colors.PURPLE}Second:{Colors.RESET}{name2}, with {score2} points"
             else:
-                players[0] = Colors.YELLOW + "First: " + Colors.RESET + f"{name2}, with {score2} points"
-                players[1] =  f"Second: {name1}, with {score1} points"
+                players[0] = f"{Colors.YELLOW}First:{Colors.RESET} {name2}, with {score2} points"
+                players[1] =  f"{Colors.PURPLE}Second:{Colors.RESET}{name1}, with {score1} points"
         
         elif len(self.playerScores) >= 3:
             name1, name2, name3 = "", "", ""
@@ -97,7 +98,7 @@ class GameStats:
 {Colors.RED}------------------------------------{Colors.RESET}
 {Colors.BOLD}Fun game Statistics:{Colors.RESET}
 
-LeaderBoard:
+{Colors.UNDERLINE}LeaderBoard:{Colors.RESET}
 
 {players[0]}
 {players[1]}

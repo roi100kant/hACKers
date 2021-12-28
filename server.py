@@ -100,7 +100,9 @@ Player 1: {self.firstPlayer.name}
 Player 2: {self.secondPlayer.name + Colors.RESET}  
 ---------------------------------- 
 {Colors.GREEN}answer as fast as you can!! you have 10 seconds or until the other player's time:
-{Colors.RED + q[0] + Colors.RESET}""").encode("utf-8")
+{Colors.RED + q[0] + Colors.RESET}
+
+Now go for it!""").encode("utf-8")
         print(msg.decode("utf-8")) 
         #generate math problam:
         self.firstPlayer.socket.send(msg)
