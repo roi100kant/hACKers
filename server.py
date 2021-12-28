@@ -68,13 +68,19 @@ class Server:
                         if self.winner != None:
                             self.condition.release()
                             return
+                        if (int(msg) <= 9) and (int(msg) >= 0): 
+                            #we've got valid input
+                            self.stats.addNumberOccurence(int(msg))
                         if int(msg) == ans:
                             self.winner = player.name
+                            self.stats.addPlayerPoint(player.name)
                         else:
                             if self.firstPlayer.name == player.name:
                                 self.winner = self.secondPlayer.name
+                                self.stats.addPlayerPoint( self.secondPlayer.name)
                             else:
                                 self.winner = self.firstPlayer.name
+                                self.stats.addPlayerPoint( self.firstPlayer.name)
                         self.condition.release()
                         return
                     except Exception as _:
