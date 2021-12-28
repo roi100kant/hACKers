@@ -57,22 +57,27 @@ class Server:
 
         end = time.time() + 10.01
         while time.time() < end:
+            if self.winner != None:
+                return
             try: 
                 msg = socket.recv(1024).decode("utf-8")
                 if msg != None:
                     self.condition.acquire()
-                    if self.winner != None:
-                        self.condition.release()
-                        break
-                    if int(msg) == ans:
-                        self.winner = player.name
-                    else:
-                        if self.firstPlayer.name == player.name:
-                            self.winner = self.secondPlayer.name
+                    try:
+                        if self.winner != None:
+                            self.condition.release()
+                            return
+                        if int(msg) == ans:
+                            self.winner = player.name
                         else:
-                            self.winner = self.firstPlayer.name
-                    self.condition.release()
-                    break
+                            if self.firstPlayer.name == player.name:
+                                self.winner = self.secondPlayer.name
+                            else:
+                                self.winner = self.firstPlayer.name
+                        self.condition.release()
+                        return
+                    except Exception as _:
+                        self.condition.release()
             except Exception as _:
                 pass
             time.sleep(0.1)
@@ -101,13 +106,14 @@ class Server:
             msg = Colors.PURPLE + f"unfortunately, neither of you won, maybe try and answer faster next time!\nbtw, the correct answer was {q[1]}" + Colors.RESET
         else:
             msg = Colors.YELLOW + f"CONGRATULATION TO { self.winner } FOR THE WIN!\nthe correct answer was {q[1]}" + Colors.RESET
+        msg = msg.encode("utf-8")
         self.firstPlayer.socket.send(msg)
         self.secondPlayer.socket.send(msg)
 
     def offers(self, udpSocket : socket.socket):
         udpSocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         while self.firstPlayer == None or self.secondPlayer == None:
-            udpSocket.sendto(self.packUdpPacket(self.port), ("255.255.255.255", 13117))
+            udpSocket.sendto(self.packUdpPacket(self.port), ("255.255.255.255", 13118))
             time.sleep(1)
 
     def manage(self, welcomeSocket : socket.socket):
@@ -143,7 +149,7 @@ class Server:
                     try:
                         self.firstPlayer.socket.send(res)
                         self.secondPlayer.socket.send(res)
-                    except:
+                    except Exception as _:
                         pass
                 # done with the everything, reseting the fields
                 try:
@@ -154,16 +160,20 @@ class Server:
                 self.firstPlayer, self.secondPlayer = None, None
                 self.winner = None
                 print(Colors.GREEN + "Game over, sending out offer requests..." + Colors.RESET)
+                offerThread = thread.Thread(target = self.offers, args = [udpSocket])
                 offerThread.start()
             except Exception as _:
+                print(e)
                 # if both player fields got set that means the offers stop, so we start them again
                 if self.firstPlayer != None and self.secondPlayer != None:
+                    offerThread = thread.Thread(target = self.offers, args = [udpSocket])
                     offerThread.start()
                 if self.firstPlayer != None:
                     try:
                         self.firstPlayer.socket.send((Colors.RED + "sorry an error has occured, reconnect" + Colors.RESET).encode("utf-8"))
                         self.firstPlayer.socket.close()
                     except Exception as _:
+                        print(e)
                         pass
                     self.firstPlayer = None
                 if self.secondPlayer != None:
@@ -171,6 +181,7 @@ class Server:
                         self.secondPlayer.socket.send((Colors.RED + "sorry an error has occured, reconnect" + Colors.RESET).encode("utf-8"))
                         self.secondPlayer.socket.close()
                     except Exception as _:
+                        print(e)
                         pass
                     self.secondPlayer = None
 
@@ -201,5 +212,5 @@ if __name__ == '__main__':
             ip = "172.1.0.69"
         if ans == "t":
             ip = "172.99.0.69"
-    server = Server(ip, 2070)
+    server = Server(ip, 2069)
     server.run()

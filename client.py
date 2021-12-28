@@ -6,7 +6,7 @@ class Client:
 
     def __init__(self, prefixIp):
         udpSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        udpSocket.bind(("", 13117)) #enter ip
+        udpSocket.bind(("", 13118)) #enter ip
         udpSocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.udpSocket = udpSocket
         self.prefixIp = prefixIp
@@ -22,9 +22,8 @@ class Client:
                 packet, IPnPort = self.udpSocket.recvfrom(1024)
                 seperate = IPnPort[0].split(".")
                 ip = self.prefixIp + "." + seperate[2] + "." + seperate[3]
-                print("got this:",packet)
+                print("got this:",packet, "unpacked: ", self.unpackUdpPacket(packet))
                 magic_cookie, msg_type, port_num = self.unpackUdpPacket(packet)
-                print("unpack this:",self.unpackUdpPacket(packet))
                 # check corectness and if so try and connect and play the game
                 if magic_cookie == 0xabcddcba and msg_type == 0x2:
                     tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -97,7 +96,7 @@ class Client:
     #in this state we are connected to the server and are about to play the game
     def handleGame(self, tcpSocket : socket.socket):
         # first step, send our name to the server 
-        tcpSocket.send("hACKers".encode("utf-8"))
+        tcpSocket.send("hACKers\n".encode("utf-8"))
 
         # then we need to wait for the server rsponse over tcp
         # and then print the message to the human players
