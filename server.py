@@ -30,6 +30,7 @@ class Server:
         self.winner = None
         self.bank = QuestionBank()
         self.condition = thread.Condition(thread.Lock())
+        self.stats = GameStats()
 
     def packUdpPacket(self, port):
         return pack('IbH', 0xabcddcba, 0x2, port)
