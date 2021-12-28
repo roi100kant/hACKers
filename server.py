@@ -59,18 +59,21 @@ class Server:
         end = time.time() + 10.01
         while time.time() < end:
             if self.winner != None:
+                socket.setblocking(1)
                 return
             try: 
                 msg = socket.recv(1024).decode("utf-8")
+                msg = msg[0]
                 if msg != None:
                     self.condition.acquire()
                     try:
                         if self.winner != None:
                             self.condition.release()
+                            socket.setblocking(1)
                             return
                         if (int(msg) <= 9) and (int(msg) >= 0): 
                             #we've got valid input
-                            self.stats.addNumberOccurence(int(msg))
+                            self.stats.addNumberOccurence(msg)
                         if int(msg) == ans:
                             self.winner = player.name
                         else:
@@ -86,15 +89,18 @@ class Server:
             except Exception as _:
                 pass
             time.sleep(0.1)
+        socket.setblocking(1)
 
     def startGame(self):
         q = self.bank.getQ()
-        msg = (self.stats.stats() + Colors.BLUE + "Hello and welcome to the game!\n" 
-                + f"Player 1: {self.firstPlayer.name}\n" 
-                + f"Player 2: {self.secondPlayer.name}\n"  
-                + "----------------------------------\n" 
-                + Colors.GREEN + f"answer as fast as you can!! you have 10 seconds or until the other guys time:\n"
-                + Colors.RED + f"{q[0]}" + Colors.RESET).encode("utf-8")
+        msg = (f"""
+{self.stats.stats() + Colors.BLUE} 
+Hello and welcome to the game! 
+Player 1: {self.firstPlayer.name} 
+Player 2: {self.secondPlayer.name + Colors.RESET}  
+---------------------------------- 
+{Colors.GREEN}answer as fast as you can!! you have 10 seconds or until the other player's time:
+{Colors.RED + q[0] + Colors.RESET}""").encode("utf-8")
         print(msg.decode("utf-8")) 
         #generate math problam:
         self.firstPlayer.socket.send(msg)
@@ -107,9 +113,9 @@ class Server:
         t1.join()
         t2.join()
         if self.winner == None:
-            msg = Colors.PURPLE + f"unfortunately, neither of you won, maybe try and answer faster next time!\nbtw, the correct answer was {q[1]}" + Colors.RESET
+            msg = Colors.PURPLE + f"unfortunately, neither of you won, maybe try and answer faster next time!\nbtw, the correct answer was {q[1]}\n" + Colors.RESET
         else:
-            msg = Colors.YELLOW + f"CONGRATULATION TO { self.winner } FOR THE WIN!\nthe correct answer was {q[1]}" + Colors.RESET
+            msg = Colors.YELLOW + f"CONGRATULATION TO { self.winner } FOR THE WIN!\nthe correct answer was {q[1]}\n" + Colors.RESET
         msg = msg.encode("utf-8")
         self.firstPlayer.socket.send(msg)
         self.secondPlayer.socket.send(msg)
@@ -117,7 +123,7 @@ class Server:
     def offers(self, udpSocket : socket.socket):
         udpSocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         while self.firstPlayer == None or self.secondPlayer == None:
-            udpSocket.sendto(self.packUdpPacket(self.port), ("255.255.255.255", 13118))
+            udpSocket.sendto(self.packUdpPacket(self.port), (self.ip + ".255.255", 13118))
             time.sleep(1)
 
     def manage(self, welcomeSocket : socket.socket):
@@ -125,7 +131,7 @@ class Server:
         t1, t2 = None, None
 
         # udp for sending broadcast
-        udpSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        udpSocket = socket.socket(family = socket.AF_INET, type = socket.SOCK_DGRAM)
         offerThread = thread.Thread(target = self.offers, args = [udpSocket])
         offerThread.start()
         while True:
@@ -145,7 +151,7 @@ class Server:
                 t2.start()
                 t1.join()
                 t2.join()
-                if (self.firstPlayer.name != None) and (self.secondPlayer.name != None):
+                if (self.firstPlayer.name not in (None, "", "\n")) and (self.secondPlayer.name not in (None, "", "\n")):
                     self.startGame()
                 else:
                     # one didnt send their name so we are cancelling the game
@@ -192,12 +198,12 @@ class Server:
 
         # creating and binding the welcome socket
         welcomeSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        welcomeSocket.bind((self.ip, self.port))
+        welcomeSocket.bind((self.ip+".0.69", self.port))
 
         welcomeSocket.listen(1)
 
         # startup message  
-        print(f"Server started, listening on IP address {self.ip}")
+        print(f"Server started, listening on IP address {self.ip}.0.69")
 
         # now need to manage accepts and at the same time send the udp offers.
         self.manage(welcomeSocket)
@@ -208,10 +214,10 @@ class Server:
 if __name__ == '__main__':
     ip = -1
     while ip == -1:
-        ans = input("enter d for dev, t for test\n")
+        ans = input("Hi! enter d for dev, t for test\n")
         if ans == "d":
-            ip = "172.1.0.69"
+            ip = "172.1"
         if ans == "t":
-            ip = "172.99.0.69"
+            ip = "172.99"
     server = Server(ip, 2069)
     server.run()

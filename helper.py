@@ -7,7 +7,7 @@ class QuestionBank:
                           ("(72 - 2 - 10 - 20) / 10 = ?", 4), ("42 / 7 = ?", 6), ("0.5 * 0.5 * 4 = ?", 1), ("1 + 1 + 1 + 1 + 1 * 0 + 1 + 1 = ?", 6),
                           ("e^0 = ?", 1), ("ln(1) = ?", 0), ("ln(e) = ?", 1), ("ln(1/e) + 1 = ?", 0), ("f(x)=x^2, f'(2) = ?", 4),
                           ("f'(x)=2x, f(3) = ?", 9), ("2x + 3 = 7, x = ?", 2), ("7x - 6 = 8, x = ?", 2), ("2 * 3", 6),("e - (e - 2)", 2),
-                          ("25 / 5 = ?", 5), ("2 cats and 1 chickens have ? legs", 9), ("5 + 5 - 1 = ?", 9), ("if anny has 5 apples and john has only 3, how much is 1 + 1?", 2),
+                          ("25 / 5 = ?", 5), ("how many legs 1 cats and 2 chickens have?", 8), ("5 + 5 - 1 = ?", 9), ("if Anny has 5 apples and John has only 3, how much is 1 + 1?", 2),
                           ("how many pants is a pair of pants", 1), ("3 * 3 / 3 * 3 / 3 * 3 / 3", 3), ("what chapter is the transport layer?", 3), 
                           ("what chapter is the network layer?", 4), ("what chapter is the link layer?", 5), ("what was the numebr of qyestions in the quiz?", 7),
                           ("9! / 8! = ?", 9), ("what number day is friday?", 6)
@@ -34,6 +34,7 @@ class GameStats:
         self.numberOcc = {"0" : 0, "1" : 0, "2" : 0, "3" : 0, "4" : 0, "5" : 0, "6" : 0, "7" : 0, "8" : 0, "9" : 0}
 
     def addPlayerPoint(self, name):
+        name = name[:len(name)-1]
         if name in self.playerScores:
             self.playerScores[name] += 1
         else:
@@ -53,15 +54,15 @@ class GameStats:
         players = ["Empty", "Empty", "Empty"]
         
         if len(self.playerScores) == 1:
-            name = self.playerScores.keys()[0]
-            players[0] = Colors.YELLOW + f"First: " + Colors.RESET + f"{name}, with {self.playerScores[name]} points" 
+            name = list(self.playerScores.keys())[0]
+            players[0] = f"{Colors.YELLOW}First:{Colors.RESET} {name}, with {self.playerScores[name]} points" 
         
         elif len(self.playerScores) == 2:
-            name1, name2 = self.playerScores.keys()[0],self.playerScores.keys()[1]
+            name1, name2 = list(self.playerScores.keys())[0],list(self.playerScores.keys())[1]
             score1, score2 = self.playerScores[name1], self.playerScores[name2]
 
             if score1 > score2:
-                players[0] = Colors.YELLOW + "First: " + Colors.RESET + f"{name1}, with {score1} points"
+                players[0] = f"{Colors.YELLOW}First:{Colors.RESET} {name1}, with {score1} points"
                 players[1] = f"Second: {name2}, with {score2} points"
             else:
                 players[0] = Colors.YELLOW + "First: " + Colors.RESET + f"{name2}, with {score2} points"
@@ -82,9 +83,9 @@ class GameStats:
                 elif self.playerScores[name] > score3:
                     name3, score3 = name, self.playerScores[name]
 
-            players[0] = Colors.YELLOW + "First: " + Colors.RESET + f"{name1}, with {score1} points"
-            players[1] = f"Second: {name2}, with {score2} points"
-            players[2] = f"Third: {name3}, with {score3} points"
+            players[0] = f"{Colors.YELLOW}First:{Colors.RESET} {name1}, with {score1} points"
+            players[1] = f"{Colors.PURPLE}Second:{Colors.RESET}{name2}, with {score2} points"
+            players[2] = f"Third:  {name3}, with {score3} points"
 
         return players
     
@@ -93,16 +94,17 @@ class GameStats:
         number = self.getMostCommonNumber()
 
         msg = f"""
-------------------------------------
-{Colors.BOLD}Game Statistics:{Colors.RESET}
+{Colors.RED}------------------------------------{Colors.RESET}
+{Colors.BOLD}Fun game Statistics:{Colors.RESET}
 
 LeaderBoard:
+
 {players[0]}
 {players[1]}
 {players[2]}
                   
 most common valid answer: {number}
-------------------------------------\n\n"""
+{Colors.RED}------------------------------------{Colors.RESET}\n\n"""
         return msg
 
 

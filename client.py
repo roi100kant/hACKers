@@ -107,7 +107,7 @@ class Client:
 if __name__ == '__main__':
     prefixIp = -1
     while prefixIp == -1:
-        ans = input("enter d for dev, t for test\n")
+        ans = input("Hi! enter d for dev, t for test\n")
         if ans == "d":
             prefixIp = "172.1"
         if ans == "t":
