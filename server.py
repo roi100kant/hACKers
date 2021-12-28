@@ -163,7 +163,6 @@ class Server:
                 offerThread = thread.Thread(target = self.offers, args = [udpSocket])
                 offerThread.start()
             except Exception as _:
-                print(e)
                 # if both player fields got set that means the offers stop, so we start them again
                 if self.firstPlayer != None and self.secondPlayer != None:
                     offerThread = thread.Thread(target = self.offers, args = [udpSocket])
@@ -173,7 +172,6 @@ class Server:
                         self.firstPlayer.socket.send((Colors.RED + "sorry an error has occured, reconnect" + Colors.RESET).encode("utf-8"))
                         self.firstPlayer.socket.close()
                     except Exception as _:
-                        print(e)
                         pass
                     self.firstPlayer = None
                 if self.secondPlayer != None:
@@ -181,7 +179,6 @@ class Server:
                         self.secondPlayer.socket.send((Colors.RED + "sorry an error has occured, reconnect" + Colors.RESET).encode("utf-8"))
                         self.secondPlayer.socket.close()
                     except Exception as _:
-                        print(e)
                         pass
                     self.secondPlayer = None
 
