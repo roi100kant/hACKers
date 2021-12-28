@@ -2,7 +2,7 @@ import socket
 import threading as thread
 from struct import *
 import time
-from helper import QuestionBank, Colors
+from helper import QuestionBank, Colors, GameStats
 
 # t1 = thread.Thread(target = <function name>) - creating a thread
 # t1.start() - starting the thread
@@ -73,14 +73,12 @@ class Server:
                             self.stats.addNumberOccurence(int(msg))
                         if int(msg) == ans:
                             self.winner = player.name
-                            self.stats.addPlayerPoint(player.name)
                         else:
                             if self.firstPlayer.name == player.name:
                                 self.winner = self.secondPlayer.name
-                                self.stats.addPlayerPoint( self.secondPlayer.name)
                             else:
                                 self.winner = self.firstPlayer.name
-                                self.stats.addPlayerPoint( self.firstPlayer.name)
+                        self.stats.addPlayerPoint(self.winner)
                         self.condition.release()
                         return
                     except Exception as _:
@@ -91,8 +89,7 @@ class Server:
 
     def startGame(self):
         q = self.bank.getQ()
-        print()
-        msg = (Colors.BLUE + "Hello and welcome to the game!\n" 
+        msg = (self.stats.stats() + Colors.BLUE + "Hello and welcome to the game!\n" 
                 + f"Player 1: {self.firstPlayer.name}\n" 
                 + f"Player 2: {self.secondPlayer.name}\n"  
                 + "----------------------------------\n" 

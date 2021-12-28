@@ -22,7 +22,6 @@ class Client:
                 packet, IPnPort = self.udpSocket.recvfrom(1024)
                 seperate = IPnPort[0].split(".")
                 ip = self.prefixIp + "." + seperate[2] + "." + seperate[3]
-                print("got this:",packet, "unpacked: ", self.unpackUdpPacket(packet))
                 magic_cookie, msg_type, port_num = self.unpackUdpPacket(packet)
                 # check corectness and if so try and connect and play the game
                 if magic_cookie == 0xabcddcba and msg_type == 0x2:
@@ -32,13 +31,11 @@ class Client:
                         print(IPnPort, port_num)
                         tcpSocket.connect((ip, port_num))
                         self.handleGame(tcpSocket)
-                    except Exception as e:
-                        print(e)
+                    except Exception as _:
                         pass
                     finally:
                         tcpSocket.close()
-            except Exception as e:
-                print(e)
+            except Exception as _:
                 pass
 
     def nonBlockingCheckResponse(self, tcpSocket : socket.socket):
