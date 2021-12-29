@@ -8,6 +8,7 @@ from helper import QuestionBank, Colors, GameStats
 # t1.start() - starting the thread
 # t1.join() - prevent from continuing until t1 has ended
 
+# a class for the players of the game
 class Player:
     def __init__(self, ip, port, socket : socket.socket):
         self.ip = ip
@@ -29,12 +30,14 @@ class Server:
         self.secondPlayer = None
         self.winner = None
         self.bank = QuestionBank()
+        # for syncronizing
         self.condition = thread.Condition(thread.Lock())
+        # for the bonus, supply statistics
         self.stats = GameStats()
-
+    # packing the udp message
     def packUdpPacket(self, port):
         return pack('=IbH', 0xabcddcba, 0x2, port)
-
+    # getting the name of the player, runs on a thread and with unblocked loop with sleep
     def getName(self, player : Player):
         socket = player.socket
         socket.setblocking(0)
@@ -50,7 +53,8 @@ class Server:
 
         socket.setblocking(1)
         player.setName(msg.decode("utf-8"))
-
+    
+    # waits for a message from the client for the game, runs unblocked for max 10 secs 
     def playerAnswer(self, player : Player, ans):
         socket = player.socket
         socket.setblocking(0)
@@ -65,8 +69,10 @@ class Server:
                 msg = socket.recv(1024).decode("utf-8")
                 msg = msg[0]
                 if msg != None:
+                    # we want lock this part of the code becuase we are determining the winner here
                     self.condition.acquire()
                     try:
+                        # if there is a winner return
                         if self.winner != None:
                             self.condition.release()
                             socket.setblocking(1)
@@ -74,6 +80,7 @@ class Server:
                         if (int(msg) <= 9) and (int(msg) >= 0): 
                             #we've got valid input
                             self.stats.addNumberOccurence(msg)
+                        # checks if the answer is correct and sets the right winner
                         if int(msg) == ans:
                             self.winner = player.name
                         else:
@@ -90,7 +97,7 @@ class Server:
                 pass
             time.sleep(0.1)
         socket.setblocking(1)
-
+    # randomizing a question and making a message to send to the client 
     def startGame(self):
         q = self.bank.getQ()
         msg = (f"""
@@ -108,7 +115,7 @@ Player 2: {self.secondPlayer.name + Colors.RESET}
         #generate math problam:
         self.firstPlayer.socket.send(msg)
         self.secondPlayer.socket.send(msg)
-
+        # we want to wait for both threads of the answer to end before continuing 
         t1 = thread.Thread(target= self.playerAnswer, args = [self.firstPlayer, q[1]])
         t2 = thread.Thread(target= self.playerAnswer, args = [self.secondPlayer, q[1]])
         t1.start()
@@ -122,13 +129,15 @@ Player 2: {self.secondPlayer.name + Colors.RESET}
         msg = msg.encode("utf-8")
         self.firstPlayer.socket.send(msg)
         self.secondPlayer.socket.send(msg)
-
+    
+    # runs on a thread and sends offer requests for clients when there isnt two connected
     def offers(self, udpSocket : socket.socket):
         udpSocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         while self.firstPlayer == None or self.secondPlayer == None:
             udpSocket.sendto(self.packUdpPacket(self.port), (self.ip + ".255.255", 13117))
             time.sleep(1)
-
+    
+    # manages the main loop of the server, accepting clients and sending them to play
     def manage(self, welcomeSocket : socket.socket):
         #forever accepting clients
         t1, t2 = None, None
@@ -170,6 +179,7 @@ Player 2: {self.secondPlayer.name + Colors.RESET}
                     self.secondPlayer.socket.close()
                 except Exception as _:
                     pass
+                # reseting data and offer thread for relunching the main loop
                 self.firstPlayer, self.secondPlayer = None, None
                 self.winner = None
                 print(Colors.GREEN + "Game over, sending out offer requests..." + Colors.RESET)
