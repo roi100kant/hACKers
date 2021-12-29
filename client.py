@@ -6,13 +6,15 @@ class Client:
 
     def __init__(self, prefixIp):
         udpSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        udpSocket.bind(("", 13117)) #enter ip
+        udpSocket.bind(("", 13117)) 
+        # allowing our socket to receive broadcasts 
         udpSocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.udpSocket = udpSocket
         self.prefixIp = prefixIp
-
+    
+    # the unpack function for the udp packet
     def unpackUdpPacket(self, packet):
-        return unpack('=IbH', packet)
+        return unpack('=IbH', packet) # the = is for removing the padding from 8 bytes to 7 bytes
 
     # main function of the client
     def run(self):
@@ -20,10 +22,12 @@ class Client:
             try:
                 # recieve the info and unpack it
                 packet, IPnPort = self.udpSocket.recvfrom(1024)
+                # seperate the IP for its prefix (for the Mask and the host)  
                 seperate = IPnPort[0].split(".")
                 if self.prefixIp != seperate[0] + "." + seperate[1]:
                     continue
                 ip = IPnPort[0]
+                # unpacking the parts of the udp packet
                 magic_cookie, msg_type, port_num = self.unpackUdpPacket(packet)
                 # check corectness and if so try and connect and play the game
                 if magic_cookie == 0xabcddcba and msg_type == 0x2:
@@ -49,7 +53,7 @@ class Client:
         def isData():
             return select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], [])
 
-        # try to get msg from the server
+        # try to get msg from the server during the game
         def gameResponse():
             global serverRes
             try:
@@ -65,7 +69,7 @@ class Client:
         old_settings = termios.tcgetattr(sys.stdin)
 
         try:
-            # places terminal into a character break
+            # places the terminal into a character break
             tty.setcbreak(sys.stdin.fileno())
             
             #our main loop, works for ten seconds, trying to get response from server and user and then sleep
