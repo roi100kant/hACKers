@@ -28,7 +28,6 @@ class Client:
                     tcpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     try:
                         print(Colors.GREEN + f"Received offer from {ip}, attempting to connect..." + Colors.RESET)
-                        print(IPnPort, port_num)
                         tcpSocket.connect((ip, port_num))
                         self.handleGame(tcpSocket)
                     except Exception as _:
