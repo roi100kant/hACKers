@@ -6,7 +6,7 @@ class Client:
 
     def __init__(self, prefixIp):
         udpSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        udpSocket.bind(("", 13118)) #enter ip
+        udpSocket.bind(("", 13117)) #enter ip
         udpSocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.udpSocket = udpSocket
         self.prefixIp = prefixIp

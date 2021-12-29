@@ -125,7 +125,7 @@ Now go for it!""").encode("utf-8")
     def offers(self, udpSocket : socket.socket):
         udpSocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         while self.firstPlayer == None or self.secondPlayer == None:
-            udpSocket.sendto(self.packUdpPacket(self.port), (self.ip + ".255.255", 13118))
+            udpSocket.sendto(self.packUdpPacket(self.port), (self.ip + ".255.255", 13117))
             time.sleep(1)
 
     def manage(self, welcomeSocket : socket.socket):
