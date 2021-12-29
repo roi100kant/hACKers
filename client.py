@@ -12,7 +12,7 @@ class Client:
         self.prefixIp = prefixIp
 
     def unpackUdpPacket(self, packet):
-        return unpack('IbH', packet)
+        return unpack('=IbH', packet)
 
     # main function of the client
     def run(self):
@@ -21,7 +21,9 @@ class Client:
                 # recieve the info and unpack it
                 packet, IPnPort = self.udpSocket.recvfrom(1024)
                 seperate = IPnPort[0].split(".")
-                ip = self.prefixIp + "." + seperate[2] + "." + seperate[3]
+                if self.prefixIp != seperate[0] + "." + seperate[1]:
+                    continue
+                ip = IPnPort[0]
                 magic_cookie, msg_type, port_num = self.unpackUdpPacket(packet)
                 # check corectness and if so try and connect and play the game
                 if magic_cookie == 0xabcddcba and msg_type == 0x2:

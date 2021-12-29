@@ -33,7 +33,7 @@ class Server:
         self.stats = GameStats()
 
     def packUdpPacket(self, port):
-        return pack('IbH', 0xabcddcba, 0x2, port)
+        return pack('=IbH', 0xabcddcba, 0x2, port)
 
     def getName(self, player : Player):
         socket = player.socket
@@ -95,14 +95,15 @@ class Server:
         q = self.bank.getQ()
         msg = (f"""
 {self.stats.stats() + Colors.BLUE} 
-Hello and welcome to the game! 
+Hello and welcome to the game!
+
 Player 1: {self.firstPlayer.name} 
 Player 2: {self.secondPlayer.name + Colors.RESET}  
 ---------------------------------- 
 {Colors.GREEN}answer as fast as you can!! you have 10 seconds or until the other player's time:
 {Colors.RED + q[0] + Colors.RESET}
 
-Now go for it!""").encode("utf-8")
+""").encode("utf-8")
         print(msg.decode("utf-8")) 
         #generate math problam:
         self.firstPlayer.socket.send(msg)
@@ -117,7 +118,7 @@ Now go for it!""").encode("utf-8")
         if self.winner == None:
             msg = Colors.PURPLE + f"unfortunately, neither of you won, maybe try and answer faster next time!\nbtw, the correct answer was {q[1]}\n" + Colors.RESET
         else:
-            msg = Colors.YELLOW + f"CONGRATULATION TO { self.winner } FOR THE WIN!\nthe correct answer was {q[1]}\n" + Colors.RESET
+            msg = Colors.YELLOW + f"CONGRATULATION TO { self.winner }FOR THE WIN!\nthe correct answer was {q[1]}\n" + Colors.RESET
         msg = msg.encode("utf-8")
         self.firstPlayer.socket.send(msg)
         self.secondPlayer.socket.send(msg)
