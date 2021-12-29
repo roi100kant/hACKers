@@ -1,6 +1,7 @@
 import random
+# the question bank class for the questions of the server's game
 class QuestionBank:
-    
+  
     def __init__(self):
         self.questions = [("17 * 2 - 29 = ?", 5), ("(45 + 54) / 11 = ?", 9), ("(35 + 27 - 18) / 11 = ?", 4), ("2 + 3 = ?", 5),
                           ("(40 + 40) / 10 = ?", 8), ("1 + 2 + 5 - 6 = ?", 2), ("3! = ?", 6), ("(345 - 127 + 171 - 98) * 0 = ?", 0),
@@ -15,6 +16,7 @@ class QuestionBank:
     def getQ(self):
         return self.questions[random.randint(0, len(self.questions)-1)]
 
+# colors class for the prints 
 class Colors:
     RED   = "\033[1;31m"  
     BLUE  = "\033[1;34m"
@@ -27,7 +29,7 @@ class Colors:
     REVERSE = "\033[;7m"
     UNDERLINE = '\033[4m'
 
-
+# game statistics, leaderboard of three players and most common valid answer
 class GameStats:
 
     def __init__(self):
